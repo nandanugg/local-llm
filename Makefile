@@ -83,7 +83,7 @@ else
   $(error BACKEND must be auto, cuda, vulkan, or cpu)
 endif
 
-.PHONY: help run run-code run-no-think server server-code server-no-think server-codex
+.PHONY: help setup run run-code run-no-think server server-code server-no-think server-codex
 .PHONY: build update clean-build check check-model check-cli check-server
 .PHONY: ensure-cli ensure-server print-config
 
@@ -98,6 +98,7 @@ help:
 		'  make server-code      API server with coding temperature (0.6)' \
 		'  make server-no-think  API server with thinking disabled' \
 		'  make server-codex     API server tuned for Codex agent workloads' \
+		'  make setup            Install CUDA build dependencies and expose nvcc' \
 		'  make build            Build llama-cli and llama-server locally' \
 		'  make check            Validate the model, binary, and required flags' \
 		'  make print-config     Show the effective configuration' \
@@ -106,6 +107,69 @@ help:
 		'  MODEL=/path/model.gguf  CTX_SIZE=32768  OUTPUT_TOKENS=4096' \
 		'  CACHE_TYPE_K=f16 CACHE_TYPE_V=f16  GPU_LAYERS=auto' \
 		'  BACKEND=cpu|cuda|vulkan  EXTRA_ARGS="..."'
+
+setup:
+	@pm=''; \
+	packages=''; \
+	if command -v pacman >/dev/null 2>&1; then \
+		pm='pacman'; \
+		packages='base-devel cmake git ripgrep cuda'; \
+		printf 'Installing build dependencies with pacman...\n'; \
+		sudo pacman -S --needed $$packages; \
+	elif command -v apt-get >/dev/null 2>&1; then \
+		pm='apt-get'; \
+		packages='build-essential cmake git ripgrep nvidia-cuda-toolkit'; \
+		printf 'Installing build dependencies with apt-get...\n'; \
+		sudo apt-get update; \
+		sudo apt-get install -y $$packages; \
+	elif command -v dnf >/dev/null 2>&1; then \
+		pm='dnf'; \
+		packages='gcc gcc-c++ make cmake git ripgrep cuda-toolkit'; \
+		printf 'Installing build dependencies with dnf...\n'; \
+		sudo dnf install -y $$packages; \
+	elif command -v zypper >/dev/null 2>&1; then \
+		pm='zypper'; \
+		packages='gcc gcc-c++ make cmake git ripgrep cuda-toolkit'; \
+		printf 'Installing build dependencies with zypper...\n'; \
+		sudo zypper install -y $$packages; \
+	else \
+		printf 'Unsupported package manager. Install these manually: C++ build tools, cmake, git, ripgrep, CUDA toolkit.\n' >&2; \
+		exit 1; \
+	fi; \
+	case "$${SHELL##*/}" in \
+		fish) \
+			config="$$HOME/.config/fish/config.fish"; \
+			mkdir -p "$$(dirname "$$config")"; \
+			if ! grep -qsF '/opt/cuda/bin' "$$config"; then \
+				printf '\n# Added by local-llm setup: CUDA compiler\nfish_add_path /opt/cuda/bin\n' >> "$$config"; \
+			fi; \
+			;; \
+		zsh) \
+			config="$$HOME/.zshrc"; \
+			if ! grep -qsF '/opt/cuda/bin' "$$config"; then \
+				printf '\n# Added by local-llm setup: CUDA compiler\nexport PATH="/opt/cuda/bin:$$PATH"\n' >> "$$config"; \
+			fi; \
+			;; \
+		bash) \
+			config="$$HOME/.bashrc"; \
+			if ! grep -qsF '/opt/cuda/bin' "$$config"; then \
+				printf '\n# Added by local-llm setup: CUDA compiler\nexport PATH="/opt/cuda/bin:$$PATH"\n' >> "$$config"; \
+			fi; \
+			;; \
+		*) \
+			config="$$HOME/.profile"; \
+			if ! grep -qsF '/opt/cuda/bin' "$$config"; then \
+				printf '\n# Added by local-llm setup: CUDA compiler\nexport PATH="/opt/cuda/bin:$$PATH"\n' >> "$$config"; \
+			fi; \
+			;; \
+	esac; \
+	printf 'Installed packages with %s and updated %s.\n' "$$pm" "$$config"; \
+	export PATH="/opt/cuda/bin:$$PATH"; \
+	if ! command -v nvcc >/dev/null 2>&1; then \
+		printf 'nvcc is still not available. Open a new shell or verify that the CUDA toolkit installed correctly.\n' >&2; \
+		exit 1; \
+	fi; \
+	nvcc --version
 
 run: check-cli check-model
 	@exec "$(LLAMA_CLI)" $(COMMON_ARGS) --conversation --multiline-input $(EXTRA_ARGS)
