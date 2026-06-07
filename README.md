@@ -50,8 +50,8 @@ make server model=qwen3.6-35b profile=openapi \
 ## Usage
 
 ```bash
-# Build llama-server locally using the detected backend
-make build
+# Compile llama-server locally using the detected backend
+make compile
 
 # Start the API server on port 8001
 make server

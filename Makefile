@@ -85,7 +85,7 @@ else
 endif
 
 .PHONY: help setup list-profiles server server-no-think server-openapi
-.PHONY: build update clean-build check check-profile check-model check-server
+.PHONY: compile update clean-compile check check-profile check-model check-server
 .PHONY: ensure-server print-config
 
 help:
@@ -97,7 +97,7 @@ help:
 		'  make server-openapi   OpenAI-compatible API server using profile=openapi' \
 		'  make setup            Install CUDA build dependencies and expose nvcc' \
 		'  make list-profiles    Show configured model/profile pairs' \
-		'  make build            Build llama-server locally' \
+		'  make compile          Compile llama-server locally' \
 		'  make check            Validate the model, server binary, and required flags' \
 		'  make print-config     Show the effective configuration' \
 		'' \
@@ -196,7 +196,7 @@ server-openapi:
 	@$(MAKE) --no-print-directory server profile=openapi
 ensure-server:
 	@if [[ ! -x "$(LLAMA_SERVER)" ]]; then \
-		$(MAKE) --no-print-directory build; \
+		$(MAKE) --no-print-directory compile; \
 	fi
 
 check: check-profile check-server check-model
@@ -226,7 +226,11 @@ check-server: ensure-server
 		done; \
 	fi
 
-build: $(BUILD_DIR)/CMakeCache.txt
+compile: $(BUILD_DIR)/CMakeCache.txt
+	@printf 'Compiling llama-server\n'
+	@printf '  backend:    %s\n' "$(RESOLVED_BACKEND)"
+	@printf '  build dir:  %s\n' "$(BUILD_DIR)"
+	@printf '  output:     %s\n' "$(BUILD_DIR)/bin/llama-server"
 	@cmake --build "$(BUILD_DIR)" --config Release -j "$(JOBS)" \
 		--target llama-server
 
@@ -247,9 +251,9 @@ update: $(LLAMA_DIR)/.git
 		-DBUILD_SHARED_LIBS=OFF \
 		-DLLAMA_CURL=OFF \
 		$(CMAKE_BACKEND_ARGS)
-	@$(MAKE) --no-print-directory build
+	@$(MAKE) --no-print-directory compile
 
-clean-build:
+clean-compile:
 	@cmake -E remove_directory "$(BUILD_DIR)"
 
 print-config: check-profile
