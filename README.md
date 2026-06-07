@@ -1,6 +1,6 @@
 # local-llm
 
-Run Qwen3.6 locally with llama.cpp using settings recommended by Unsloth.
+Run local GGUF models through the llama.cpp HTTP server using configurable model profiles.
 
 ## Requirements
 
@@ -10,7 +10,7 @@ Run Qwen3.6 locally with llama.cpp using settings recommended by Unsloth.
 - `rg` for capability checks
 - A local GGUF model
 
-The default model path is:
+The default profile uses this model path:
 
 ```text
 ~/Downloads/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
@@ -19,20 +19,39 @@ The default model path is:
 Override it when needed:
 
 ```bash
-make run MODEL=/path/to/model.gguf
+make server MODEL=/path/to/model.gguf
+```
+
+## Profiles
+
+Profiles live under `profiles/<model>/<profile>.mk` and set the GGUF path,
+model alias, sampling settings, and model-specific llama.cpp arguments.
+
+List available profiles:
+
+```bash
+make list-profiles
+```
+
+Run a selected model/profile pair:
+
+```bash
+make server model=qwen3.6-35b profile=codex
+```
+
+Command-line overrides still work:
+
+```bash
+make server model=qwen3.6-35b profile=codex \
+  MODEL=/path/to/model.gguf \
+  CTX_SIZE=32768
 ```
 
 ## Usage
 
 ```bash
-# Build llama.cpp locally using the detected backend
+# Build llama-server locally using the detected backend
 make build
-
-# Interactive general-purpose mode
-make run
-
-# Interactive coding mode
-make run-code
 
 # Start the API server on port 8001
 make server
@@ -40,7 +59,7 @@ make server
 # Start the server with Codex/OpenCode agent settings
 make server-codex
 
-# Validate the model and llama.cpp binaries
+# Validate the model and llama-server binary
 make check
 
 # Show the effective configuration
@@ -51,6 +70,7 @@ Override settings through Make variables:
 
 ```bash
 make server-codex \
+  model=qwen3.6-35b \
   MODEL=/path/to/model.gguf \
   BACKEND=cuda \
   CTX_SIZE=131072
