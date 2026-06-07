@@ -84,7 +84,7 @@ else
   $(error BACKEND must be auto, cuda, vulkan, or cpu)
 endif
 
-.PHONY: help setup list-profiles server server-code server-no-think server-openapi
+.PHONY: help setup list-profiles server server-no-think server-openapi
 .PHONY: build update clean-build check check-profile check-model check-server
 .PHONY: ensure-server print-config
 
@@ -93,7 +93,6 @@ help:
 		'local llama.cpp runner' \
 		'' \
 		'  make server           API server on http://$(HOST):$(PORT)' \
-		'  make server-code      API server using profile=code' \
 		'  make server-no-think  API server using profile=no-think' \
 		'  make server-openapi   OpenAI-compatible API server using profile=openapi' \
 		'  make setup            Install CUDA build dependencies and expose nvcc' \
@@ -190,10 +189,6 @@ server: check-profile check-server check-model
 		--port "$(PORT)" \
 		--parallel "$(PARALLEL)" \
 		$(EXTRA_ARGS)
-
-server-code:
-	@$(MAKE) --no-print-directory server profile=code
-
 server-no-think:
 	@$(MAKE) --no-print-directory server profile=no-think
 
