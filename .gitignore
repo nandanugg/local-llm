@@ -1,0 +1,13 @@
+# Local llama.cpp checkout and build artifacts
+/.llama.cpp/
+
+# Model weights
+*.gguf
+*.bin
+*.safetensors
+
+# Local configuration and caches
+.env
+.env.*
+!.env.example
+.cache/
