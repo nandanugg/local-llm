@@ -36,13 +36,13 @@ make list-profiles
 Run a selected model/profile pair:
 
 ```bash
-make server model=qwen3.6-35b profile=codex
+make server model=qwen3.6-35b profile=openapi
 ```
 
 Command-line overrides still work:
 
 ```bash
-make server model=qwen3.6-35b profile=codex \
+make server model=qwen3.6-35b profile=openapi \
   MODEL=/path/to/model.gguf \
   CTX_SIZE=32768
 ```
@@ -56,8 +56,8 @@ make build
 # Start the API server on port 8001
 make server
 
-# Start the server with Codex/OpenCode agent settings
-make server-codex
+# Start the OpenAI-compatible server for Codex/OpenCode/other CLI clients
+make server-openapi
 
 # Validate the model and llama-server binary
 make check
@@ -69,7 +69,7 @@ make print-config
 Override settings through Make variables:
 
 ```bash
-make server-codex \
+make server-openapi \
   model=qwen3.6-35b \
   MODEL=/path/to/model.gguf \
   BACKEND=cuda \

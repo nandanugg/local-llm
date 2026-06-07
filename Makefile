@@ -84,7 +84,7 @@ else
   $(error BACKEND must be auto, cuda, vulkan, or cpu)
 endif
 
-.PHONY: help setup list-profiles server server-code server-no-think server-codex
+.PHONY: help setup list-profiles server server-code server-no-think server-openapi
 .PHONY: build update clean-build check check-profile check-model check-server
 .PHONY: ensure-server print-config
 
@@ -95,7 +95,7 @@ help:
 		'  make server           API server on http://$(HOST):$(PORT)' \
 		'  make server-code      API server using profile=code' \
 		'  make server-no-think  API server using profile=no-think' \
-		'  make server-codex     API server using profile=codex' \
+		'  make server-openapi   OpenAI-compatible API server using profile=openapi' \
 		'  make setup            Install CUDA build dependencies and expose nvcc' \
 		'  make list-profiles    Show configured model/profile pairs' \
 		'  make build            Build llama-server locally' \
@@ -103,7 +103,7 @@ help:
 		'  make print-config     Show the effective configuration' \
 		'' \
 		'Useful overrides:' \
-		'  model=qwen3.6-35b profile=codex  MODEL=/path/model.gguf' \
+		'  model=qwen3.6-35b profile=openapi  MODEL=/path/model.gguf' \
 		'  CTX_SIZE=32768 OUTPUT_TOKENS=4096 GPU_LAYERS=auto' \
 		'  BACKEND=cpu|cuda|vulkan EXTRA_ARGS="..."'
 
@@ -197,8 +197,8 @@ server-code:
 server-no-think:
 	@$(MAKE) --no-print-directory server profile=no-think
 
-server-codex:
-	@$(MAKE) --no-print-directory server profile=codex
+server-openapi:
+	@$(MAKE) --no-print-directory server profile=openapi
 ensure-server:
 	@if [[ ! -x "$(LLAMA_SERVER)" ]]; then \
 		$(MAKE) --no-print-directory build; \
