@@ -3,7 +3,7 @@ SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 dq := "
 
-model ?= qwen3.6-35b
+model ?= qwen3.6-27b
 profile ?= default
 
 PROFILES_DIR ?= $(CURDIR)/profiles
@@ -84,7 +84,7 @@ else
   $(error BACKEND must be auto, cuda, vulkan, or cpu)
 endif
 
-.PHONY: help setup list-profiles server server-no-think server-openapi
+.PHONY: help setup list-profiles server
 .PHONY: compile update clean-compile check check-profile check-model check-server
 .PHONY: ensure-server print-config
 
@@ -93,8 +93,6 @@ help:
 		'local llama.cpp runner' \
 		'' \
 		'  make server           API server on http://$(HOST):$(PORT)' \
-		'  make server-no-think  API server using profile=no-think' \
-		'  make server-openapi   OpenAI-compatible API server using profile=openapi' \
 		'  make setup            Install CUDA build dependencies and expose nvcc' \
 		'  make list-profiles    Show configured model/profile pairs' \
 		'  make compile          Compile llama-server locally' \
@@ -102,7 +100,7 @@ help:
 		'  make print-config     Show the effective configuration' \
 		'' \
 		'Useful overrides:' \
-		'  model=qwen3.6-35b profile=openapi  MODEL=/path/model.gguf' \
+		'  model=qwen3.6-27b profile=general  MODEL=/path/model.gguf' \
 		'  CTX_SIZE=32768 OUTPUT_TOKENS=4096 GPU_LAYERS=auto' \
 		'  BACKEND=cpu|cuda|vulkan EXTRA_ARGS="..."'
 
@@ -189,11 +187,6 @@ server: check-profile check-server check-model
 		--port "$(PORT)" \
 		--parallel "$(PARALLEL)" \
 		$(EXTRA_ARGS)
-server-no-think:
-	@$(MAKE) --no-print-directory server profile=no-think
-
-server-openapi:
-	@$(MAKE) --no-print-directory server profile=openapi
 ensure-server:
 	@if [[ ! -x "$(LLAMA_SERVER)" ]]; then \
 		$(MAKE) --no-print-directory compile; \

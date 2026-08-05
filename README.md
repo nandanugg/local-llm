@@ -10,11 +10,13 @@ Run local GGUF models through the llama.cpp HTTP server using configurable model
 - `rg` for capability checks
 - A local GGUF model
 
-The default profile uses this model path:
+The profiles use the Qwen3.6 27B MTP GGUF configured in `.envrc`:
 
-```text
-~/Downloads/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+```bash
+export QWEN36_27B_MTP_GGUF=/path/to/Qwen3.6-27B-UD-Q4_K_XL.gguf
 ```
+
+Load `.envrc` with `direnv allow` or `source .envrc` before invoking Make.
 
 Override it when needed:
 
@@ -27,6 +29,13 @@ make server MODEL=/path/to/model.gguf
 Profiles live under `profiles/<model>/<profile>.mk` and set the GGUF path,
 model alias, sampling settings, and model-specific llama.cpp arguments.
 
+The Qwen3.6 27B profiles all enable MTP with Unsloth's recommended two draft
+tokens and 262,144-token maximum context:
+
+- `default`: precise coding and OpenAI-compatible agent use (`temperature=0.6`)
+- `general`: general thinking tasks (`temperature=1.0`)
+- `no-think`: general instruct mode (`temperature=0.7`, `top_p=0.8`)
+
 List available profiles:
 
 ```bash
@@ -36,13 +45,13 @@ make list-profiles
 Run a selected model/profile pair:
 
 ```bash
-make server model=qwen3.6-35b profile=openapi
+make server model=qwen3.6-27b profile=general
 ```
 
 Command-line overrides still work:
 
 ```bash
-make server model=qwen3.6-35b profile=openapi \
+make server model=qwen3.6-27b profile=general \
   MODEL=/path/to/model.gguf \
   CTX_SIZE=32768
 ```
@@ -53,11 +62,14 @@ make server model=qwen3.6-35b profile=openapi \
 # Compile llama-server locally using the detected backend
 make compile
 
-# Start the API server on port 8001
+# Start the coding/OpenAI-compatible default profile on port 8001
 make server
 
-# Start the OpenAI-compatible server for Codex/OpenCode/other CLI clients
-make server-openapi
+# Start the general thinking profile
+make server profile=general
+
+# Start the non-thinking instruct profile
+make server profile=no-think
 
 # Validate the model and llama-server binary
 make check
@@ -69,8 +81,8 @@ make print-config
 Override settings through Make variables:
 
 ```bash
-make server-openapi \
-  model=qwen3.6-35b \
+make server \
+  model=qwen3.6-27b \
   MODEL=/path/to/model.gguf \
   BACKEND=cuda \
   CTX_SIZE=131072
