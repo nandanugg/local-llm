@@ -8,6 +8,7 @@ Run local GGUF models through the llama.cpp HTTP server using configurable model
 - Git
 - CMake and a C++ build toolchain
 - `rg` for capability checks
+- `fuser` from `psmisc` for stopping the server
 - A local GGUF model
 
 The profiles use the Qwen3.6 27B MTP GGUF configured in `.envrc`:
@@ -70,6 +71,9 @@ make server profile=general
 
 # Start the non-thinking instruct profile
 make server profile=no-think
+
+# Stop the process listening on the configured server port
+make kill-server
 
 # Validate the model and llama-server binary
 make check

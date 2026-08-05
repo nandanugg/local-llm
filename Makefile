@@ -84,7 +84,7 @@ else
   $(error BACKEND must be auto, cuda, vulkan, or cpu)
 endif
 
-.PHONY: help setup list-profiles server
+.PHONY: help setup list-profiles server kill-server
 .PHONY: compile update clean-compile check check-profile check-model check-server
 .PHONY: ensure-server print-config
 
@@ -93,6 +93,7 @@ help:
 		'local llama.cpp runner' \
 		'' \
 		'  make server           API server on http://$(HOST):$(PORT)' \
+		'  make kill-server      Stop the process listening on port $(PORT)' \
 		'  make setup            Install CUDA build dependencies and expose nvcc' \
 		'  make list-profiles    Show configured model/profile pairs' \
 		'  make compile          Compile llama-server locally' \
@@ -125,25 +126,25 @@ setup:
 		pm='pacman'; \
 		packages='base-devel cmake git ripgrep cuda'; \
 		printf 'Installing build dependencies with pacman...\n'; \
-		sudo pacman -S --needed $$packages; \
+		sudo pacman -S --needed $$packages psmisc; \
 	elif command -v apt-get >/dev/null 2>&1; then \
 		pm='apt-get'; \
 		packages='build-essential cmake git ripgrep nvidia-cuda-toolkit'; \
 		printf 'Installing build dependencies with apt-get...\n'; \
 		sudo apt-get update; \
-		sudo apt-get install -y $$packages; \
+		sudo apt-get install -y $$packages psmisc; \
 	elif command -v dnf >/dev/null 2>&1; then \
 		pm='dnf'; \
 		packages='gcc gcc-c++ make cmake git ripgrep cuda-toolkit'; \
 		printf 'Installing build dependencies with dnf...\n'; \
-		sudo dnf install -y $$packages; \
+		sudo dnf install -y $$packages psmisc; \
 	elif command -v zypper >/dev/null 2>&1; then \
 		pm='zypper'; \
 		packages='gcc gcc-c++ make cmake git ripgrep cuda-toolkit'; \
 		printf 'Installing build dependencies with zypper...\n'; \
-		sudo zypper install -y $$packages; \
+		sudo zypper install -y $$packages psmisc; \
 	else \
-		printf 'Unsupported package manager. Install these manually: C++ build tools, cmake, git, ripgrep, CUDA toolkit.\n' >&2; \
+		printf 'Unsupported package manager. Install these manually: C++ build tools, cmake, git, ripgrep, psmisc, CUDA toolkit.\n' >&2; \
 		exit 1; \
 	fi; \
 	case "$${SHELL##*/}" in \
@@ -187,6 +188,29 @@ server: check-profile check-server check-model
 		--port "$(PORT)" \
 		--parallel "$(PARALLEL)" \
 		$(EXTRA_ARGS)
+
+kill-server:
+	@command -v fuser >/dev/null 2>&1 || { \
+		printf 'fuser is required; install the psmisc package.\n' >&2; \
+		exit 1; \
+	}; \
+	pids="$$(fuser -n tcp "$(PORT)" 2>/dev/null || true)"; \
+	if [[ -z "$$pids" ]]; then \
+		printf 'No server is listening on port %s.\n' "$(PORT)"; \
+		exit 0; \
+	fi; \
+	printf 'Stopping listener on port %s: %s\n' "$(PORT)" "$$pids"; \
+	kill -TERM $$pids; \
+	for _ in {1..10}; do \
+		[[ -z "$$(fuser -n tcp "$(PORT)" 2>/dev/null || true)" ]] && break; \
+		sleep 1; \
+	done; \
+	remaining="$$(fuser -n tcp "$(PORT)" 2>/dev/null || true)"; \
+	if [[ -n "$$remaining" ]]; then \
+		printf 'Force-stopping listener: %s\n' "$$remaining"; \
+		kill -KILL $$remaining; \
+	fi
+
 ensure-server:
 	@if [[ ! -x "$(LLAMA_SERVER)" ]]; then \
 		$(MAKE) --no-print-directory compile; \
