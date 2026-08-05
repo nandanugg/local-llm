@@ -39,40 +39,19 @@ LLAMA_SERVER ?= $(if $(SYSTEM_LLAMA_SERVER),$(SYSTEM_LLAMA_SERVER),$(BUILD_DIR)/
 MODEL ?=
 MODEL_ALIAS ?= $(model)
 
-CTX_SIZE ?= 32768
-OUTPUT_TOKENS ?= 4096
-TEMPERATURE ?= 1.0
-TOP_P ?= 0.95
-TOP_K ?= 20
-MIN_P ?= 0.0
-PRESENCE_PENALTY ?= 0.0
-REPEAT_PENALTY ?= 1.0
-GPU_LAYERS ?= auto
-BATCH_SIZE ?= 2048
-UBATCH_SIZE ?= 512
 PROFILE_ARGS ?=
 REQUIRED_FLAGS ?=
 
 HOST ?= 0.0.0.0
 PORT ?= 8001
-PARALLEL ?= 1
 EXTRA_ARGS ?=
 
-COMMON_ARGS = \
+GENERIC_ARGS = \
 	--model "$(MODEL)" \
-	--ctx-size "$(CTX_SIZE)" \
-	--n-predict "$(OUTPUT_TOKENS)" \
-	--batch-size "$(BATCH_SIZE)" \
-	--ubatch-size "$(UBATCH_SIZE)" \
+	--alias "$(MODEL_ALIAS)" \
 	--threads "$(THREADS)" \
-	--gpu-layers "$(GPU_LAYERS)" \
-	--temp "$(TEMPERATURE)" \
-	--top-p "$(TOP_P)" \
-	--top-k "$(TOP_K)" \
-	--min-p "$(MIN_P)" \
-	--presence-penalty "$(PRESENCE_PENALTY)" \
-	--repeat-penalty "$(REPEAT_PENALTY)" \
-	$(PROFILE_ARGS)
+	--host "$(HOST)" \
+	--port "$(PORT)"
 
 ifeq ($(RESOLVED_BACKEND),cuda)
   CMAKE_BACKEND_ARGS := -DGGML_CUDA=ON -DGGML_VULKAN=OFF
@@ -182,11 +161,8 @@ setup:
 	fi; \
 	nvcc --version
 server: check-profile check-server check-model
-	@exec "$(LLAMA_SERVER)" $(COMMON_ARGS) \
-		--alias "$(MODEL_ALIAS)" \
-		--host "$(HOST)" \
-		--port "$(PORT)" \
-		--parallel "$(PARALLEL)" \
+	@exec "$(LLAMA_SERVER)" $(GENERIC_ARGS) \
+		$(PROFILE_ARGS) \
 		$(EXTRA_ARGS)
 
 kill-server:
@@ -287,7 +263,6 @@ print-config: check-profile
 		'BATCH/UBATCH' "$(BATCH_SIZE)/$(UBATCH_SIZE)" \
 		'THREADS' "$(THREADS)" \
 		'GPU_LAYERS' "$(GPU_LAYERS)" \
-		'PARALLEL' "$(PARALLEL)" \
 		'REQUIRED_FLAGS' "$(REQUIRED_FLAGS)" \
 		'PROFILE_ARGS' "$(subst $(dq),\$(dq),$(PROFILE_ARGS))" \
 		'EXTRA_ARGS' "$(subst $(dq),\$(dq),$(EXTRA_ARGS))"
