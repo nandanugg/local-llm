@@ -29,6 +29,8 @@ CACHE_TYPE_V := q4_0
 # CACHE_TYPE_K := q8_0
 # CACHE_TYPE_V := q8_0
 
+CACHE_RAM := 53248 
+
 # MTP Settings
 MTP_DRAFT_TOKENS := 4
 MTP_DRAFT_P_MIN := 0.8
@@ -42,7 +44,8 @@ REQUIRED_FLAGS := \
 	--spec-draft-type-k \
 	--spec-draft-type-v \
 	--chat-template-kwargs \
-	--cache-type-k
+	--cache-type-k \
+   --cache-ram
 
 PROFILE_ARGS := \
 	--ctx-size "$(CTX_SIZE)" \
@@ -69,4 +72,6 @@ PROFILE_ARGS := \
 	--chat-template-kwargs '{"preserve_thinking":$(PRESERVE_THINKING)}' \
 	--jinja \
 	--kv-unified \
+	--cache-ram "$(CACHE_RAM)" \
+   --cache-idle-slots
 	--reasoning off
