@@ -33,12 +33,12 @@ CACHE_TYPE_V := q4_0
 CACHE_RAM := 29696
 
 # MTP Settings
-MTP_DRAFT_TOKENS := 4
+MTP_DRAFT_TOKENS := 16
 MTP_DRAFT_P_MIN := 0.8
 
 # Thinking + coding focused: reasoning stays on, high effort, kept across turns
 REASONING := on
-REASONING_EFFORT := high
+REASONING_EFFORT := xhigh
 PRESERVE_THINKING := true
 
 REQUIRED_FLAGS := \

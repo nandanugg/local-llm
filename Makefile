@@ -3,7 +3,7 @@ SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 dq := "
 
-model ?= qwen3.6-27b
+model ?= qwen3.8-27b-q4
 profile ?= default
 
 PROFILES_DIR ?= $(CURDIR)/profiles
