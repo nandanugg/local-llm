@@ -1,12 +1,13 @@
-MODEL := $(QWEN36_27B_MTP_GGUF)
-MODEL_ALIAS := unsloth/Qwen3.6-27B
+MODEL := $(QWEN38_27B_Q4_MTP_GGUF)
+MODEL_ALIAS := unsloth/Qwen3.8-27B
 
 # CTX_SIZE := 262144 # full ctx
 # OUTPUT_TOKENS := 32768 # full ouput
 CTX_SIZE := 131072
 OUTPUT_TOKENS := 16384
 
-TEMPERATURE := 0.6
+# Unsloth-recommended thinking-mode sampling
+TEMPERATURE := 1.0
 TOP_P := 0.95
 TOP_K := 20
 MIN_P := 0.0
@@ -29,13 +30,16 @@ CACHE_TYPE_V := q4_0
 # CACHE_TYPE_K := q8_0
 # CACHE_TYPE_V := q8_0
 
-CACHE_RAM := 53248 
+CACHE_RAM := 29696
 
 # MTP Settings
 MTP_DRAFT_TOKENS := 4
 MTP_DRAFT_P_MIN := 0.8
 
-PRESERVE_THINKING := false
+# Thinking + coding focused: reasoning stays on, high effort, kept across turns
+REASONING := on
+REASONING_EFFORT := high
+PRESERVE_THINKING := true
 
 REQUIRED_FLAGS := \
 	--spec-type \
@@ -45,7 +49,7 @@ REQUIRED_FLAGS := \
 	--spec-draft-type-v \
 	--chat-template-kwargs \
 	--cache-type-k \
-   --cache-ram
+	--cache-ram
 
 PROFILE_ARGS := \
 	--ctx-size "$(CTX_SIZE)" \
@@ -69,9 +73,9 @@ PROFILE_ARGS := \
 	--spec-draft-type-v q4_0 \
 	--parallel 1 \
 	--no-mmproj \
-	--chat-template-kwargs '{"preserve_thinking":$(PRESERVE_THINKING)}' \
+	--chat-template-kwargs '{"preserve_thinking":$(PRESERVE_THINKING),"reasoning_effort":"$(REASONING_EFFORT)"}' \
 	--jinja \
 	--kv-unified \
 	--cache-ram "$(CACHE_RAM)" \
-   --cache-idle-slots
-	--reasoning off
+	--cache-idle-slots \
+	--reasoning $(REASONING)

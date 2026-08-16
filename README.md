@@ -11,10 +11,10 @@ Run local GGUF models through the llama.cpp HTTP server using configurable model
 - `fuser` from `psmisc` for stopping the server
 - A local GGUF model
 
-The profiles use the Qwen3.6 27B MTP GGUF configured in `.envrc`:
+The profiles use the Qwen3.8 27B MTP GGUF (Q4_K_XL) configured in `.envrc`:
 
 ```bash
-export QWEN36_27B_MTP_GGUF=/path/to/Qwen3.6-27B-UD-Q4_K_XL.gguf
+export QWEN38_27B_Q4_MTP_GGUF=/path/to/Qwen3.8-27B-UD-Q4_K_XL.gguf
 ```
 
 Load `.envrc` with `direnv allow` or `source .envrc` before invoking Make.
@@ -30,12 +30,16 @@ make server MODEL=/path/to/model.gguf
 Profiles live under `profiles/<model>/<profile>.mk` and set the GGUF path,
 model alias, sampling settings, and model-specific llama.cpp arguments.
 
-The Qwen3.6 27B profiles all enable MTP with Unsloth's recommended two draft
-tokens and 262,144-token maximum context:
+The Qwen3.8 27B profiles all enable MTP and use Unsloth's recommended
+sampling settings:
 
-- `default`: precise coding and OpenAI-compatible agent use (`temperature=0.6`)
-- `general`: general thinking tasks (`temperature=1.0`)
-- `no-think`: general instruct mode (`temperature=0.7`, `top_p=0.8`)
+- `default`: thinking + coding focused (`temperature=1.0`, reasoning on,
+  `reasoning_effort=high`, reduced 131,072-token context for a lower
+  VRAM/RAM footprint)
+- `general`: general thinking tasks (`temperature=1.0`, full 262,144-token
+  context)
+- `no-think`: general instruct mode (`temperature=0.7`, `top_p=0.8`, thinking
+  disabled, full 262,144-token context)
 
 List available profiles:
 
@@ -46,13 +50,13 @@ make list-profiles
 Run a selected model/profile pair:
 
 ```bash
-make server model=qwen3.6-27b profile=general
+make server model=qwen3.8-27b-q4 profile=general
 ```
 
 Command-line overrides still work:
 
 ```bash
-make server model=qwen3.6-27b profile=general \
+make server model=qwen3.8-27b-q4 profile=general \
   MODEL=/path/to/model.gguf \
   CTX_SIZE=32768
 ```
@@ -86,7 +90,7 @@ Override settings through Make variables:
 
 ```bash
 make server \
-  model=qwen3.6-27b \
+  model=qwen3.8-27b-q4 \
   MODEL=/path/to/model.gguf \
   BACKEND=cuda \
   CTX_SIZE=131072
